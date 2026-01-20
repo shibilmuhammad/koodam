@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Hero from '../components/Hero';
 import FilterBar from '../components/FilterBar';
@@ -12,10 +12,26 @@ const Home = () => {
   const [sortOrder, setSortOrder] = useState('price-low');
   
   // Use properties from localStorage if available, else initial data
-  const [properties] = useState(() => {
-     const stored = localStorage.getItem('kyte_properties');
+  // Sync with data.js storage key
+  const STORAGE_KEY = 'kyte_properties_v2';
+
+  const [properties, setProperties] = useState(() => {
+     const stored = localStorage.getItem(STORAGE_KEY);
      return stored ? JSON.parse(stored) : initialProperties;
   });
+
+  // Listen for updates from Admin panel
+  useEffect(() => {
+    const handleStorageUpdate = () => {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        setProperties(JSON.parse(stored));
+      }
+    };
+
+    window.addEventListener('storage-update', handleStorageUpdate);
+    return () => window.removeEventListener('storage-update', handleStorageUpdate);
+  }, []);
 
   const filteredProperties = useMemo(() => {
     return properties
