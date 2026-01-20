@@ -5,23 +5,26 @@ const AdminForm = ({ resort = null, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
     name: '',
     location: '',
+    category: 'budget',
     description: '',
     price: '',
-    images: [],
+    whatsapp: '',
   });
 
-  const [imageUrls, setImageUrls] = useState(['']);
+  const [images, setImages] = useState([]);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     if (resort) {
       setFormData({
         name: resort.name || '',
         location: resort.location || '',
+        category: resort.category || 'budget',
         description: resort.description || '',
         price: resort.price || '',
-        images: resort.images || [],
+        whatsapp: resort.whatsapp || '',
       });
-      setImageUrls(resort.images && resort.images.length > 0 ? resort.images : ['']);
+      setImages(resort.images || []);
     }
   }, [resort]);
 
@@ -30,36 +33,50 @@ const AdminForm = ({ resort = null, onSave, onCancel }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleImageUrlChange = (index, value) => {
-    const newUrls = [...imageUrls];
-    newUrls[index] = value;
-    setImageUrls(newUrls);
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    setIsProcessing(true);
+    const promises = files.map(file => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => resolve(event.target.result);
+        reader.onerror = (error) => reject(error);
+        reader.readAsDataURL(file);
+      });
+    });
+
+    Promise.all(promises)
+      .then(base64Images => {
+        setImages(prev => [...prev, ...base64Images]);
+        setIsProcessing(false);
+      })
+      .catch(err => {
+        console.error("Error converting images", err);
+        setIsProcessing(false);
+      });
   };
 
-  const addImageField = () => {
-    setImageUrls([...imageUrls, '']);
-  };
-
-  const removeImageField = (index) => {
-    if (imageUrls.length > 1) {
-      const newUrls = imageUrls.filter((_, i) => i !== index);
-      setImageUrls(newUrls);
-    }
+  const removeImage = (index) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const images = imageUrls.filter((url) => url.trim() !== '');
-    // Use default WhatsApp number for all resorts
-    onSave({ ...formData, images, whatsapp: '919847124541' });
+    onSave({ 
+      ...formData, 
+      images,
+      price: Number(formData.price) 
+    });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
       {/* Name */}
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-white/80 mb-2">
-          Resort Name *
+          Property Name *
         </label>
         <input
           type="text"
@@ -68,105 +85,149 @@ const AdminForm = ({ resort = null, onSave, onCancel }) => {
           value={formData.name}
           onChange={handleChange}
           required
-          className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400"
-          placeholder="Enter resort name"
+          className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent"
+          placeholder="Enter property name"
         />
       </div>
 
-      {/* Location */}
-      <div>
-        <label htmlFor="location" className="block text-sm font-medium text-white/80 mb-2">
-          Location *
-        </label>
-        <input
-          type="text"
-          id="location"
-          name="location"
-          value={formData.location}
-          onChange={handleChange}
-          required
-          className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400"
-          placeholder="City, State"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Location */}
+        <div>
+          <label htmlFor="location" className="block text-sm font-medium text-white/80 mb-2">
+            Location *
+          </label>
+          <input
+            type="text"
+            id="location"
+            name="location"
+            value={formData.location}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent"
+            placeholder="City, Place"
+          />
+        </div>
+
+        {/* Category */}
+        <div>
+          <label htmlFor="category" className="block text-sm font-medium text-white/80 mb-2">
+            Category *
+          </label>
+          <select
+            id="category"
+            name="category"
+            value={formData.category}
+            onChange={handleChange}
+            className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent cursor-pointer"
+          >
+            <option value="budget" className="bg-brand-dark">Budget Friendly</option>
+            <option value="mid" className="bg-brand-dark">Mid-Range</option>
+            <option value="luxury" className="bg-brand-dark">Luxury</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Price */}
+        <div>
+          <label htmlFor="price" className="block text-sm font-medium text-white/80 mb-2">
+            Price per Night (₹) *
+          </label>
+          <input
+            type="number"
+            id="price"
+            name="price"
+            value={formData.price}
+            onChange={handleChange}
+            required
+            min="0"
+            className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent"
+            placeholder="2500"
+          />
+        </div>
+
+        {/* WhatsApp */}
+        <div>
+          <label htmlFor="whatsapp" className="block text-sm font-medium text-white/80 mb-2">
+            WhatsApp Number
+          </label>
+          <input
+            type="text"
+            id="whatsapp"
+            name="whatsapp"
+            value={formData.whatsapp}
+            onChange={handleChange}
+            className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent"
+            placeholder="91XXXXXXXXXX"
+          />
+        </div>
       </div>
 
       {/* Description */}
       <div>
         <label htmlFor="description" className="block text-sm font-medium text-white/80 mb-2">
-          Description *
+          Description
         </label>
         <textarea
           id="description"
           name="description"
           value={formData.description}
           onChange={handleChange}
-          required
-          rows={4}
-          className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400 resize-none"
-          placeholder="Describe the resort..."
+          rows={3}
+          className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent resize-none"
+          placeholder="Describe the property..."
         />
       </div>
 
-      {/* Price */}
-      <div>
-        <label htmlFor="price" className="block text-sm font-medium text-white/80 mb-2">
-          Price per Night *
-        </label>
-        <input
-          type="text"
-          id="price"
-          name="price"
-          value={formData.price}
-          onChange={handleChange}
-          required
-          className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400"
-          placeholder="₹3,500"
-        />
-      </div>
-
-      {/* Images */}
+      {/* Images Upload */}
       <div>
         <label className="block text-sm font-medium text-white/80 mb-2">
-          Image URLs *
+          Property Images
         </label>
-        {imageUrls.map((url, index) => (
-          <div key={index} className="flex gap-2 mb-2">
-            <input
-              type="url"
-              value={url}
-              onChange={(e) => handleImageUrlChange(index, e.target.value)}
-              className="flex-1 px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400"
-              placeholder="https://example.com/image.jpg"
-            />
-            {imageUrls.length > 1 && (
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          {images.map((img, index) => (
+            <div key={index} className="relative aspect-video rounded-lg overflow-hidden border border-white/10 group">
+              <img src={img} alt={`Preview ${index}`} className="w-full h-full object-cover" />
               <button
                 type="button"
-                onClick={() => removeImageField(index)}
-                className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors"
+                onClick={() => removeImage(index)}
+                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
               >
-                Remove
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
-            )}
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={addImageField}
-          className="mt-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors text-sm"
-        >
-          + Add Another Image
-        </button>
+            </div>
+          ))}
+          
+          <label className="flex flex-col items-center justify-center aspect-video rounded-lg border-2 border-dashed border-white/20 hover:border-brand-accent hover:bg-white/5 transition-all cursor-pointer">
+            <input 
+              type="file" 
+              multiple 
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden" 
+            />
+            <svg className="w-8 h-8 text-white/40 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            <span className="text-xs text-white/60">Upload Images</span>
+          </label>
+        </div>
+        {isProcessing && <p className="text-xs text-brand-accent animate-pulse">Processing images...</p>}
       </div>
 
       {/* Actions */}
-      <div className="flex gap-4 pt-4">
+      <div className="flex gap-4 pt-4 border-t border-white/10">
         <motion.button
           type="submit"
+          disabled={isProcessing}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="flex-1 px-6 py-3 bg-teal-500 hover:bg-teal-600 text-white font-semibold rounded-lg transition-colors"
+          className="flex-1 px-6 py-3 bg-brand-accent hover:bg-brand-accent-hover text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {resort ? 'Update Resort' : 'Add Resort'}
+          {resort ? 'Update Property' : 'Add Property'}
         </motion.button>
         <motion.button
           type="button"

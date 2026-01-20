@@ -4,27 +4,18 @@
 
 @layer base {
   body {
-    @apply bg-[#0A0A0A] text-white;
+    @apply bg-brand-dark text-white antialiased;
     font-family: 'Inter', system-ui, sans-serif;
   }
 }
 
 @layer utilities {
-  .wavy-line {
-    position: relative;
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
   }
   
-  .wavy-line::after {
-    content: '';
-    position: absolute;
-    bottom: -8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80%;
-    height: 2px;
-    background: white;
-    border-radius: 2px;
-    opacity: 0.3;
+  .glass-panel {
+    @apply bg-black/40 backdrop-blur-md border border-white/10;
   }
 }
 
@@ -39,15 +30,13 @@ html {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0A0A0A;
+  @apply bg-brand-dark;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #14b8a6;
-  border-radius: 4px;
+  @apply bg-brand-accent rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2dd4bf;
+  @apply bg-brand-accent-hover;
 }
-

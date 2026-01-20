@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
-import Resorts from './pages/Resorts';
 import Admin from './pages/Admin';
 
 function App() {
@@ -13,7 +12,6 @@ function App() {
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/resorts" element={<Resorts />} />
             <Route path="/admin" element={<Admin />} />
           </Routes>
         </main>

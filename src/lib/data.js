@@ -1,116 +1,64 @@
-// Mock API functions for resort data management
-// In a real app, these would connect to a backend API
+import { properties as initialProperties } from '../data/properties';
 
-let resortsData = [
-  {
-    id: "1",
-    name: "Mountain View Resort",
-    location: "Munnar, Kerala",
-    description: "A serene mountain retreat with breathtaking views of tea plantations and misty valleys.",
-    price: "₹3,500",
-    images: [
-      "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800",
-      "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800",
-      "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=800"
-    ],
-    whatsapp: "919847124541"
-  },
-  {
-    id: "2",
-    name: "Beachside Paradise",
-    location: "Varkala, Kerala",
-    description: "Wake up to the sound of waves at this beautiful beachfront property with modern amenities.",
-    price: "₹4,200",
-    images: [
-      "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800",
-      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800",
-      "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800"
-    ],
-    whatsapp: "919847124541"
-  },
-  {
-    id: "3",
-    name: "Backwater Bliss",
-    location: "Alleppey, Kerala",
-    description: "Experience authentic Kerala backwaters in this traditional houseboat-style resort.",
-    price: "₹5,000",
-    images: [
-      "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800",
-      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
-      "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800"
-    ],
-    whatsapp: "919847124541"
-  }
-];
+const STORAGE_KEY = 'kyte_properties';
 
-// Load data from localStorage if available, otherwise use default
-const loadResorts = () => {
-  const stored = localStorage.getItem('koodam_resorts');
-  if (stored) {
-    try {
-      resortsData = JSON.parse(stored);
-    } catch (e) {
-      console.error('Error loading resorts from localStorage:', e);
-    }
-  }
-  return resortsData;
+// Helper to get data from storage
+const getData = () => {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  return stored ? JSON.parse(stored) : initialProperties;
 };
 
-// Save data to localStorage
-const saveResorts = (data) => {
-  localStorage.setItem('koodam_resorts', JSON.stringify(data));
-  resortsData = data;
+// Helper to save data to storage
+const saveData = (data) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  // Dispatch a custom event so other components can react
+  window.dispatchEvent(new Event('storage-update'));
 };
 
-// Initialize on load
-loadResorts();
-
-// API Functions
 export const getResorts = async () => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 100));
-  return [...loadResorts()];
-};
-
-export const getResortById = async (id) => {
-  await new Promise(resolve => setTimeout(resolve, 100));
-  const resorts = loadResorts();
-  return resorts.find(r => r.id === id) || null;
+  // Simulate network delay
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(getData());
+    }, 500);
+  });
 };
 
 export const addResort = async (resort) => {
-  await new Promise(resolve => setTimeout(resolve, 200));
-  const resorts = loadResorts();
-  const newResort = {
-    ...resort,
-    id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-    whatsapp: resort.whatsapp || '919847124541' // Default WhatsApp number
-  };
-  resorts.push(newResort);
-  saveResorts(resorts);
-  return newResort;
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const current = getData();
+      const newResort = {
+        ...resort,
+        id: crypto.randomUUID(),
+        price: Number(resort.price)
+      };
+      saveData([...current, newResort]);
+      resolve(newResort);
+    }, 500);
+  });
 };
 
 export const updateResort = async (id, updates) => {
-  await new Promise(resolve => setTimeout(resolve, 200));
-  const resorts = loadResorts();
-  const index = resorts.findIndex(r => r.id === id);
-  if (index === -1) throw new Error('Resort not found');
-  
-  resorts[index] = { 
-    ...resorts[index], 
-    ...updates,
-    whatsapp: updates.whatsapp || '919847124541' // Ensure default WhatsApp number
-  };
-  saveResorts(resorts);
-  return resorts[index];
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const current = getData();
+      const updated = current.map(item => 
+        item.id === id ? { ...item, ...updates, price: Number(updates.price) } : item
+      );
+      saveData(updated);
+      resolve(updated.find(item => item.id === id));
+    }, 500);
+  });
 };
 
 export const deleteResort = async (id) => {
-  await new Promise(resolve => setTimeout(resolve, 200));
-  const resorts = loadResorts();
-  const filtered = resorts.filter(r => r.id !== id);
-  saveResorts(filtered);
-  return true;
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const current = getData();
+      const filtered = current.filter(item => item.id !== id);
+      saveData(filtered);
+      resolve(true);
+    }, 500);
+  });
 };
-

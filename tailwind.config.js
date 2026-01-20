@@ -7,11 +7,13 @@ export default {
   theme: {
     extend: {
       colors: {
-        'teal': {
-          400: '#2dd4bf',
-          500: '#14b8a6',
-          600: '#0d9488',
-        },
+        brand: {
+          dark: '#0A0A0A',
+          gray: '#171717',
+          light: '#F5F5F5',
+          accent: '#14b8a6', // Teal-500
+          'accent-hover': '#0d9488', // Teal-600
+        }
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
