@@ -33,29 +33,45 @@ const AdminForm = ({ resort = null, onSave, onCancel }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
     setIsProcessing(true);
-    const promises = files.map(file => {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (event) => resolve(event.target.result);
-        reader.onerror = (error) => reject(error);
-        reader.readAsDataURL(file);
-      });
-    });
+    
+    // Cloudinary configuration
+    const cloudName = 'dcfcq3cji';
+    const uploadPreset = 'kyte_uploads';
 
-    Promise.all(promises)
-      .then(base64Images => {
-        setImages(prev => [...prev, ...base64Images]);
-        setIsProcessing(false);
-      })
-      .catch(err => {
-        console.error("Error converting images", err);
-        setIsProcessing(false);
+    try {
+      const uploadPromises = files.map(file => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', uploadPreset);
+
+        return fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.secure_url) {
+            return data.secure_url;
+          } else {
+            console.error('Upload failed:', data);
+            throw new Error('Upload failed');
+          }
+        });
       });
+
+      const uploadedUrls = await Promise.all(uploadPromises);
+      setImages(prev => [...prev, ...uploadedUrls]);
+    } catch (error) {
+      console.error("Error uploading images", error);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const removeImage = (index) => {
@@ -67,7 +83,8 @@ const AdminForm = ({ resort = null, onSave, onCancel }) => {
     onSave({ 
       ...formData, 
       images,
-      price: Number(formData.price) 
+      price: Number(formData.price),
+      whatsapp: '919847124541' // Hardcoded default number
     });
   };
 
@@ -143,22 +160,6 @@ const AdminForm = ({ resort = null, onSave, onCancel }) => {
             min="0"
             className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent"
             placeholder="2500"
-          />
-        </div>
-
-        {/* WhatsApp */}
-        <div>
-          <label htmlFor="whatsapp" className="block text-sm font-medium text-white/80 mb-2">
-            WhatsApp Number
-          </label>
-          <input
-            type="text"
-            id="whatsapp"
-            name="whatsapp"
-            value={formData.whatsapp}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent"
-            placeholder="91XXXXXXXXXX"
           />
         </div>
       </div>

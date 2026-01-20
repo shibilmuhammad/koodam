@@ -59,6 +59,7 @@ const PropertyCard = ({ property, index }) => {
           <WhatsAppButton 
             phone={property.whatsapp} 
             resortName={property.name} 
+            imageUrl={property.images && property.images.length > 0 ? property.images[0] : ''}
             className="!w-auto !px-4 !py-2 !text-xs" 
           />
         </div>

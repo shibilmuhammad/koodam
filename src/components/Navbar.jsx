@@ -19,7 +19,7 @@ const Navbar = () => {
               <img
                 src="/logo.png"
                 alt="Kyte Travel Partner"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
               />
             </motion.div>
             <div className="flex flex-col">

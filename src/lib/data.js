@@ -1,6 +1,6 @@
 import { properties as initialProperties } from '../data/properties';
 
-const STORAGE_KEY = 'kyte_properties';
+const STORAGE_KEY = 'kyte_properties_v2';
 
 // Helper to get data from storage
 const getData = () => {

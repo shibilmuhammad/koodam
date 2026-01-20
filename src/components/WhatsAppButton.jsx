@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 
-const WhatsAppButton = ({ phone, resortName }) => {
-  const message = encodeURIComponent(`I'm interested in booking ${resortName}`);
+const WhatsAppButton = ({ phone, resortName, imageUrl }) => {
+  const message = encodeURIComponent(`I'm interested in booking *${resortName}*.\n\nImage: ${imageUrl}`);
   const whatsappUrl = `https://wa.me/${phone}?text=${message}`;
 
   return (
